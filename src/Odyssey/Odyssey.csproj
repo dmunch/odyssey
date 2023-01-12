@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net5.0;netstandard2.1</TargetFrameworks>
+        <TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>Odyssey</AssemblyName>
         <RootNamespace>Odyssey</RootNamespace>
@@ -12,14 +12,13 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="O9d.Guard" Version="0.1.0"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2"/>
-        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.31.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[5.0,8.0)"/>
-        <PackageReference Include="Microsoft.Extensions.Options" Version="[5.0,8.0)"/>
-        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="[5.0,8.0)"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[5.0,8.0)"/>
-        <PackageReference Include="OneOf" Version="[3.0.160, 4.0)"/>
-        <PackageReference Include="MinVer" Version="4.2.0" PrivateAssets="All"/>
+        <PackageReference Include="O9d.Guard" Version="0.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="[6.0.0, 8.0.0)" />
+        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.31.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[6.0.0, 8.0.0)" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="[6.0.0, 8.0.0)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[6.0.0, 8.0.0)" />
+        <PackageReference Include="OneOf" Version="[3.0.223, 4.0)" />
+        <PackageReference Include="MinVer" Version="4.2.0" PrivateAssets="All" />
     </ItemGroup>
 </Project>
