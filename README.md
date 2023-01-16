@@ -20,6 +20,14 @@ static CosmosClient CreateClient(IConfiguration configuration)
 
 You can provide a factory to create and register the underlying `CosmosClient` instance as per the above example, otherwise you must register this yourself.
 
+#### Initialization
+
+If you want Odyssey to auto-create the database and/or container, call `IEventStore.Initialize` at startup:
+
+```c#
+await builder.Services.GetRequiredService<IEventStore>().Initialize();
+```
+
 ### Take a dependency on `IEventStore`
 
 ```c#

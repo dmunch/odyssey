@@ -31,6 +31,8 @@ public sealed class CosmosEventStore : IEventStore
         _logger = loggerFactory.NotNull().CreateLogger<CosmosEventStore>();
 
         _serializer = JsonSerializer.Create(SerializerSettings.Default);
+        _database = _cosmosClient.GetDatabase(_options.DatabaseId); // Does not guarantee existence
+        _container = _database.GetContainer(_options.ContainerId); // Does not guarantee existence
     }
 
     // Could be abstracted
@@ -51,10 +53,6 @@ public sealed class CosmosEventStore : IEventStore
                 _database = databaseResponse.Database;
             }
         }
-        else
-        {
-            _database = _cosmosClient.GetDatabase(_options.DatabaseId); // Does not guarantee existence
-        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -62,10 +60,6 @@ public sealed class CosmosEventStore : IEventStore
         {
             var containerResponse = await CreateContainerIfNotExists(_database, _options.ContainerId, cancellationToken);
             _container = containerResponse.Container;
-        }
-        else
-        {
-            _container = _database.GetContainer(_options.ContainerId); // Does not guarantee existence
         }
     }
 
