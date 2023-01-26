@@ -30,23 +30,8 @@ public sealed class CosmosEvent
     [JsonProperty("_ts")] // Unix time
     public long? Timestamp { get; set; }
 
-    public EventData ToEventData(JsonSerializer serializer)
-    {
-        if (!Metadata.TryGetValue(MetadataFields.ClrQualifiedType, out var clrTypeValue)
-            || clrTypeValue is not string typeName)
-        {
-            throw new ArgumentException($"Item {Id} is missing the required {MetadataFields.ClrQualifiedType} metadata value");
-        }
-
-        // TODO implement type cache
-        Type? clrType = Type.GetType(typeName);
-
-        if (clrType is null)
-        {
-            throw new ArgumentException($"The type {typeName} cannot be resolved");
-        }
-
-        return new EventData(
+    public EventData ToEventData(Type clrType, JsonSerializer serializer)
+        => new(
             EventId,
             EventType,
             Data.ToObject(clrType, serializer),
@@ -55,7 +40,6 @@ public sealed class CosmosEvent
         {
             EventNumber = EventNumber
         };
-    }
 
     public static CosmosEvent FromEventData(string streamId, long eventNumber, EventData @event, JsonSerializer serializer)
         => new()

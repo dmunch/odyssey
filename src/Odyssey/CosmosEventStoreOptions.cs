@@ -10,6 +10,8 @@ public class CosmosEventStoreOptions
         AutoCreateDatabase = true;
         ContainerId = "events";
         AutoCreateContainer = true;
+        TypeResolver = TypeResolvers.UsingClrQualifiedTypeMetadata;
+        UnresolvedTypeStrategy = UnresolvedTypeStrategies.Throw;
     }
 
     public string DatabaseId { get; set; }
@@ -17,4 +19,6 @@ public class CosmosEventStoreOptions
     public string ContainerId { get; set; }
     public bool AutoCreateContainer { get; set; }
     public ThroughputProperties? DatabaseThroughputProperties { get; set; }
+    public TypeResolver TypeResolver { get; set; }
+    public UnresolvedTypeStrategy UnresolvedTypeStrategy { get; set; }
 }

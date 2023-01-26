@@ -275,7 +275,13 @@ public sealed class CosmosEventStore : IEventStore
 
             foreach (var @event in response)
             {
-                events.Add(@event.ToEventData(_serializer));
+                Type? eventType = _options.TypeResolver.Invoke(@event.Id, @event.Metadata);
+
+                EventData eventData = eventType is not null
+                    ? @event.ToEventData(eventType, _serializer)
+                    : _options.UnresolvedTypeStrategy.Invoke(@event);
+
+                events.Add(eventData);
             }
         }
 

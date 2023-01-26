@@ -82,3 +82,42 @@ static CosmosClient CreateClient(IConfiguration configuration)
 ```
 
 Note that this also demonstrates how to specify the throughput properties of the created Container.
+
+### Type Resolvers
+
+By default, events are deserialized to the fully qualified type of the original event using the automatically generated metadata field `_clr_type`.
+
+In some cases such as event consumers, you may not have access to the original assembly in which the event types reside. Instead, you can choose provide your own type map which will make use of the `_clr_type_name` (the _non_-qualified type name) to resolve the type, for example:
+
+```c#
+var typeMap = new Dictionary<string, Type> {
+    { nameof(TestEvent), typeof(SomeOtherEvent) }
+}.ToImmutableDictionary();
+
+builder.Services.AddOdyssey(
+    configureOptions: options => options.TypeResolver = TypeResolvers.UsingTypeMap(typeMap),
+    cosmosClientFactory: _ => CreateClient(builder.Configuration),
+    builder.Configuration.GetSection("Odyssey")
+);
+```
+
+#### Handling unresolved types
+
+In some cases it may not be possible or desirable to resolve an event's type. This could be the case for consumers where you wish to ignore certain events or in producers where an event has been deprecated.
+The default strategy is to throw. This can be overridden by providing your own `UnresolvedTypeStrategy` or using the provided strategy, `UnresolvedTypeStrategy.Skip`:
+
+```c#
+builder.Services.AddOdyssey(
+    configureOptions: options => options.UnresolvedTypeStrategy = UnresolvedTypeStrategy.Skip,
+    cosmosClientFactory: _ => CreateClient(builder.Configuration),
+    builder.Configuration.GetSection("Odyssey")
+);
+```
+
+When using `Skip`, any event types that have failed to resolve using the provided `TypeResolver` will resolve to an instance of `UnresolvedEvent`.
+
+Alternatively, if you are using the type map resolver above, you can specify a fallback type:
+
+```c#
+TypeResolvers.UsingTypeMap(typeMap, typeof(MyFallbackType))
+```
