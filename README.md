@@ -108,7 +108,7 @@ The default strategy is to throw. This can be overridden by providing your own `
 
 ```c#
 builder.Services.AddOdyssey(
-    configureOptions: options => options.UnresolvedTypeStrategy = UnresolvedTypeStrategy.Skip,
+    configureOptions: options => options.UnresolvedTypeStrategy = UnresolvedTypeStrategies.Skip,
     cosmosClientFactory: _ => CreateClient(builder.Configuration),
     builder.Configuration.GetSection("Odyssey")
 );
