@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using O9d.Guard;
-
+using OneOf;
+using OneOf.Types;
 using AppendResult = OneOf.OneOf<Success, UnexpectedStreamState>;
 
 public class InMemoryEventStore : IEventStore
@@ -87,5 +88,21 @@ public class InMemoryEventStore : IEventStore
         }
 
         return Task.FromResult<IReadOnlyCollection<EventData>>(events.AsReadOnly());
+    }
+
+    public Task<OneOf<EventData, NotFound>> ReadStreamEvent(string streamId, long eventNumber, CancellationToken cancellationToken = default)
+    {
+        streamId.NotNullOrWhiteSpace();
+        if (eventNumber < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(eventNumber), "Event number cannot be negative");
+        }
+
+        if (!_streams.TryGetValue(streamId, out var stream) || eventNumber >= stream.Count)
+        {
+            return Task.FromResult<OneOf<EventData, NotFound>>(new NotFound());
+        }
+
+        return Task.FromResult<OneOf<EventData, NotFound>>(stream[(int)eventNumber]);
     }
 }

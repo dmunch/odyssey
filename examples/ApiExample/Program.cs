@@ -76,6 +76,16 @@ app.MapGet("/events/{id}", async (string id, [Microsoft.AspNetCore.Mvc.FromQuery
     return Results.Ok(events);
 });
 
+app.MapGet("/events/{id}/{version}", async (string id, long version) =>
+{
+    var eventResult = await eventStore.ReadStreamEvent(id, version);
+
+    return eventResult.Match(
+        e => Results.Ok(e),
+        notFound => Results.NotFound()
+    );
+});
+
 var platformId = Id.NewId("acc");
 
 app.MapPost("onboarding/applications", async (InitiateApplicationRequest applicationRequest) =>

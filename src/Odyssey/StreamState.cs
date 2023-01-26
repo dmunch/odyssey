@@ -12,7 +12,6 @@ public readonly struct StreamState : IEquatable<StreamState>, IComparable<Stream
         _value = value;
     }
 
-
     private static class Constants
     {
         public const int NoStream = -1;

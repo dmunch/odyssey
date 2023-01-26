@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using O9d.Guard;
+using OneOf;
+using OneOf.Types;
 
 namespace Odyssey;
 
-using AppendResult = OneOf.OneOf<Success, UnexpectedStreamState>;
+using AppendResult = OneOf<Success, UnexpectedStreamState>;
 
 public sealed class CosmosEventStore : IEventStore
 {
@@ -275,16 +277,44 @@ public sealed class CosmosEventStore : IEventStore
 
             foreach (var @event in response)
             {
-                Type? eventType = _options.TypeResolver.Invoke(@event.Id, @event.Metadata);
-
-                EventData eventData = eventType is not null
-                    ? @event.ToEventData(eventType, _serializer)
-                    : _options.UnresolvedTypeStrategy.Invoke(@event);
+                EventData eventData = ResolveEvent(@event);
 
                 events.Add(eventData);
             }
         }
 
         return events.AsReadOnly();
+    }
+
+    public async Task<OneOf<EventData, NotFound>> ReadStreamEvent(string streamId, long eventNumber, CancellationToken cancellationToken = default)
+    {
+        streamId.NotNullOrWhiteSpace();
+        if (eventNumber < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(eventNumber), "Event number cannot be negative");
+        }
+
+        try
+        {
+            ItemResponse<CosmosEvent> itemResponse = await _container.ReadItemAsync<CosmosEvent>(
+                CosmosEvent.GenerateId(eventNumber, streamId),
+                new PartitionKey(streamId),
+                cancellationToken: cancellationToken);
+
+            return ResolveEvent(itemResponse.Resource);
+        }
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return new NotFound();
+        }
+    }
+
+    private EventData ResolveEvent(CosmosEvent @event)
+    {
+        Type? eventType = _options.TypeResolver.Invoke(@event.Id, @event.Metadata);
+
+        return eventType is not null
+            ? @event.ToEventData(eventType, _serializer)
+            : _options.UnresolvedTypeStrategy.Invoke(@event);
     }
 }
