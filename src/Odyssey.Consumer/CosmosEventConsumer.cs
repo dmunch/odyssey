@@ -30,22 +30,25 @@ internal sealed class CosmosEventConsumer : IHostedService
         IServiceProvider serviceProvider,
         TypeMap typeMap)
     {
-        _eventConsumerOptions = eventConsumerOptions.Value;
-        _cosmosClient = cosmosClient;
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-        TypeMap = typeMap.Value;
+        _eventConsumerOptions = eventConsumerOptions.Value.NotNull();
+        _cosmosClient = cosmosClient.NotNull();
+        _logger = logger.NotNull();
+        _serviceProvider = serviceProvider.NotNull();
+        TypeMap = typeMap.NotNull().Value.NotNull();
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting Event Consumer");
 
-        var database = _cosmosClient.GetDatabase(_eventConsumerOptions.DatabaseId);
+        var leaseDatabaseId = string.IsNullOrWhiteSpace(_eventConsumerOptions.LeaseDatabaseId) ?
+            _eventConsumerOptions.DatabaseId : _eventConsumerOptions.LeaseDatabaseId;
 
-        // Container reference with creation if it does not alredy exist
+        var database = _cosmosClient.GetDatabase(leaseDatabaseId);
+
+        // Container reference with creation if it does not already exist
         var leaseContainer = await database.CreateContainerIfNotExistsAsync(
-            id: _eventConsumerOptions.LeaseContainer,
+            id: _eventConsumerOptions.LeaseContainerId,
             partitionKeyPath: "/id", // lease partition ley must be id or partitionKey
             cancellationToken: cancellationToken
         );
