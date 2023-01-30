@@ -98,7 +98,12 @@ public sealed class CosmosEventStore : IEventStore
             return Success.Instance;
         }
 
-        _logger.LogDebug("Append to stream {ExpectedState}@{StreamId}.", expectedState, streamId);
+        _logger.LogDebug(
+            "Append {EventCount} events to stream {StreamId} at position {ExpectedState}",
+            events.Count,
+            streamId,
+            expectedState
+        );
 
         var result = expectedState switch
         {
@@ -204,8 +209,6 @@ public sealed class CosmosEventStore : IEventStore
     /// </summary>
     private async Task<AppendResult> AppendToStreamAtVersion(string streamId, IReadOnlyList<EventData> events, StreamState version, bool validateVersion, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Append to stream at {Version}@{StreamId}.", version, streamId);
-
         TransactionalBatch batch = _container.CreateTransactionalBatch(new PartitionKey(streamId));
 
         var transactionalBatchItemRequestOptions = new TransactionalBatchItemRequestOptions
