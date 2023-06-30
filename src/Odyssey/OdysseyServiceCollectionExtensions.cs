@@ -11,7 +11,8 @@ public static class OdysseyServiceCollectionExtensions
         this IServiceCollection services,
         Action<CosmosEventStoreOptions>? configureOptions = null,
         Func<IServiceProvider, CosmosClient>? cosmosClientFactory = null,
-        IConfiguration? configurationSection = null)
+        IConfiguration? configurationSection = null,
+        Action<OdysseyOptions>? configureOdysseyOptions = null)
     {
         services.NotNull();
 
@@ -26,8 +27,10 @@ public static class OdysseyServiceCollectionExtensions
         }
 
         configureOptions ??= (_ => { });
+        configureOdysseyOptions ??= (_ => { });
 
         services.Configure(configureOptions);
+        services.Configure(configureOdysseyOptions);
         services.AddSingleton<IEventStore, CosmosEventStore>();
 
         return services;

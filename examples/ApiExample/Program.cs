@@ -1,6 +1,7 @@
 using ApiExample.Onboarding;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using Minid;
 using O9d.Json.Formatting;
 using Odyssey;
@@ -15,10 +16,11 @@ builder.Services.AddOdyssey(cosmosClientFactory: _ => CreateClient(builder.Confi
 var app = builder.Build();
 
 IEventStore eventStore = app.Services.GetRequiredService<IEventStore>();
+var options = Options.Create(new OdysseyOptions());
 
 await eventStore.Initialize();
 
-var repository = new AggregateRepository<Id>(eventStore);
+var repository = new AggregateRepository<Id>(eventStore, options);
 
 Task<IResult> NotFoundTask = Task.FromResult(Results.NotFound());
 

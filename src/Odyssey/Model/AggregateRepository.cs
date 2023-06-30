@@ -1,16 +1,19 @@
 namespace Odyssey.Model;
 
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using O9d.Guard;
 using OneOf;
 
 public sealed class AggregateRepository<TId> : IAggregateRepository<TId>
 {
     private readonly IEventStore _eventStore;
+    private readonly OdysseyOptions _options;
 
-    public AggregateRepository(IEventStore eventStore)
+    public AggregateRepository(IEventStore eventStore, IOptions<OdysseyOptions> options)
     {
         _eventStore = eventStore.NotNull();
+        _options = options.NotNull().Value.NotNull();
     }
 
     public async Task<OneOf<T, AggregateNotFound>> GetById<T>(TId id, CancellationToken cancellationToken = default) where T : IAggregate<TId>, new()
@@ -50,7 +53,7 @@ public sealed class AggregateRepository<TId> : IAggregateRepository<TId>
         var eventsToStore = new List<EventData>();
         foreach (var @event in aggregateEvents)
         {
-            eventsToStore.Add(CreateEventData(@event));
+            eventsToStore.Add(_options.EventDataFactory.Invoke(@event));
         }
 
         var result = await _eventStore.AppendToStream(streamId, eventsToStore.AsReadOnly(), StreamState.AtVersion(aggregate.LastVersion), cancellationToken);
@@ -62,9 +65,4 @@ public sealed class AggregateRepository<TId> : IAggregateRepository<TId>
 
         return result;
     }
-
-    // TODO allow metadata to be provided
-    // Snake case event by default?
-    private static EventData CreateEventData(object @event)
-        => new(Guid.NewGuid(), @event.GetType().Name, @event);
 }
