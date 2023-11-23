@@ -1,6 +1,7 @@
 namespace Odyssey;
 
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json;
 
 public class CosmosEventStoreOptions
 {
@@ -12,6 +13,7 @@ public class CosmosEventStoreOptions
         AutoCreateContainer = true;
         TypeResolver = TypeResolvers.UsingClrQualifiedTypeMetadata;
         UnresolvedTypeStrategy = UnresolvedTypeStrategies.Throw;
+        EventSerializerSettings = SerializerSettings.Default;
     }
 
     public string DatabaseId { get; set; }
@@ -21,4 +23,10 @@ public class CosmosEventStoreOptions
     public ThroughputProperties? DatabaseThroughputProperties { get; set; }
     public TypeResolver TypeResolver { get; set; }
     public UnresolvedTypeStrategy UnresolvedTypeStrategy { get; set; }
+
+    /// <summary>
+    /// Gets or sets the settings used to serialize event data. Defaults to <see cref="SerializerSettings.Default"/> 
+    /// </summary>
+    /// <value></value>
+    public JsonSerializerSettings EventSerializerSettings { get; set; }
 }

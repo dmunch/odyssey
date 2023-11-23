@@ -32,7 +32,7 @@ public sealed class CosmosEventStore : IEventStore
         _cosmosClient = cosmosClient.NotNull();
         _logger = loggerFactory.NotNull().CreateLogger<CosmosEventStore>();
 
-        _serializer = JsonSerializer.Create(SerializerSettings.Default);
+        _serializer = JsonSerializer.Create(_options.EventSerializerSettings ?? SerializerSettings.Default);
         _database = _cosmosClient.GetDatabase(_options.DatabaseId); // Does not guarantee existence
         _container = _database.GetContainer(_options.ContainerId); // Does not guarantee existence
     }
