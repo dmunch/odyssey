@@ -69,6 +69,20 @@ public class InMemoryEventStoreTests
         events.Last().EventNumber.ShouldBe(0);
     }
 
+    [Fact]
+    public async Task Can_remove_stream()
+    {
+        var streamId = Guid.NewGuid().ToString();
+        await _eventStore.AppendToStream(streamId, new[] { Map(new TestEvent()) }, StreamState.NoStream);
+
+        var events = await _eventStore.ReadStream(streamId, ReadDirection.Backwards, StreamPosition.Start);
+        events.Count().ShouldBe(1);
+
+        _eventStore.DeleteStream(streamId);
+        events = await _eventStore.ReadStream(streamId, ReadDirection.Backwards, StreamPosition.Start);
+        events.Count.ShouldBe(0);
+    }
+
     static EventData Map<TEvent>(TEvent @event)
         => new(Guid.NewGuid(), @event!.GetType().Name, @event);
 

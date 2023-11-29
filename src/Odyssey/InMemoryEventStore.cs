@@ -105,4 +105,22 @@ public class InMemoryEventStore : IEventStore
 
         return Task.FromResult<OneOf<EventData, NotFound>>(stream[(int)eventNumber]);
     }
+
+    /// <summary>
+    /// Deletes the stream with the specified stream identifier
+    /// </summary>
+    /// <param name="streamId"></param>
+    /// <returns></returns>
+    public bool DeleteStream(string streamId)
+    {
+        return _streams.TryRemove(streamId, out _);
+    }
+
+    /// <summary>
+    /// Resets the entire in-memory store, clearing all streams
+    /// </summary>
+    public void Reset()
+    {
+        _streams.Clear();
+    }
 }
