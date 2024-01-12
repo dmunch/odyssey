@@ -1,0 +1,16 @@
+[
+  {
+    "id": "0@test-stream",
+    "stream_id": "test-stream",
+    "event_id": "3766c7f2-ac53-4f1c-bc51-4c5f28757e26",
+    "event_type": "json_event",
+    "data": {
+      "reference": "Did the thing"
+    },
+    "metadata": {
+      "_clr_type": "Odyssey.Tests.JsonEvent, Odyssey.Tests",
+      "_clr_type_name": "JsonEvent"
+    },
+    "event_number": 0
+  }
+]
