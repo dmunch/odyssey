@@ -83,6 +83,19 @@ public class InMemoryEventStoreTests
         events.Count.ShouldBe(0);
     }
 
+    [Fact]
+    public async Task Can_be_cloned()
+    {
+        var streamId = Guid.NewGuid().ToString();
+        await _eventStore.AppendToStream(streamId, new[] { Map(new TestEvent()) }, StreamState.NoStream);
+
+        var clone = new InMemoryEventStore();
+        await _eventStore.CopyTo(clone);
+
+        var events = await _eventStore.ReadStream(streamId, ReadDirection.Backwards, StreamPosition.Start);
+        events.Count().ShouldBe(1);
+    }
+
     static EventData Map<TEvent>(TEvent @event)
         => new(Guid.NewGuid(), @event!.GetType().Name, @event);
 

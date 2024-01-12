@@ -2,6 +2,7 @@ namespace Odyssey;
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using O9d.Guard;
@@ -9,7 +10,7 @@ using OneOf;
 using OneOf.Types;
 using AppendResult = OneOf.OneOf<Success, UnexpectedStreamState>;
 
-public class InMemoryEventStore : IEventStore
+public class InMemoryEventStore : IEventStore, ICloneable
 {
     private static readonly IReadOnlyCollection<EventData> EmptyStream = Array.Empty<EventData>();
     private readonly ConcurrentDictionary<string, List<EventData>> _streams = new();
@@ -114,6 +115,25 @@ public class InMemoryEventStore : IEventStore
     public bool DeleteStream(string streamId)
     {
         return _streams.TryRemove(streamId, out _);
+    }
+
+    /// <summary>
+    /// Copies in-memory streams to the target event store
+    /// </summary>
+    /// <param name="target">The target event store to write to</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task CopyTo(IEventStore target, CancellationToken cancellationToken = default)
+    {
+        target.NotNull();
+
+        foreach ((string streamId, List<EventData> events) in _streams)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await target.AppendToStream(streamId, events, StreamState.NoStream, cancellationToken);
+            }
+        };
     }
 
     /// <summary>
