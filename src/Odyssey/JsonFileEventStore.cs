@@ -16,10 +16,10 @@ public sealed class JsonFileEventStore : IEventStore, ICloneable
     private readonly JsonSerializer _serializer;
     private readonly TypeResolver _eventTypeResolver;
 
-    public JsonFileEventStore(string storagePath)
+    public JsonFileEventStore(string storagePath, JsonSerializerSettings? serializerSettings = null)
     {
         _storagePath = storagePath.NotNull();
-        _serializer = JsonSerializer.Create(SerializerSettings.Default);
+        _serializer = JsonSerializer.Create(serializerSettings ?? SerializerSettings.Default);
         _eventTypeResolver = TypeResolvers.UsingClrQualifiedTypeMetadata;
     }
 
