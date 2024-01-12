@@ -2,7 +2,6 @@ namespace Odyssey;
 
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using O9d.Guard;
@@ -10,10 +9,15 @@ using OneOf;
 using OneOf.Types;
 using AppendResult = OneOf.OneOf<Success, UnexpectedStreamState>;
 
-public class InMemoryEventStore : IEventStore, ICloneable
+public sealed class InMemoryEventStore : IEventStore, ICloneable
 {
     private static readonly IReadOnlyCollection<EventData> EmptyStream = Array.Empty<EventData>();
-    private readonly ConcurrentDictionary<string, List<EventData>> _streams = new();
+    private ConcurrentDictionary<string, List<EventData>> _streams = new();
+
+    // We could probably use dictionaries rather than InMemoryEventStore but this avoids
+    // having to a deep clone of the streams
+    private readonly ConcurrentDictionary<string, InMemoryEventStore> _snapshots = new();
+    private SemaphoreSlim _snapshotLock = new SemaphoreSlim(1);
 
     public Task Initialize(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -142,5 +146,56 @@ public class InMemoryEventStore : IEventStore, ICloneable
     public void Reset()
     {
         _streams.Clear();
+    }
+
+    /// <summary>
+    /// Creates a snapshot of all streams in the event store
+    /// </summary>
+    /// <returns>The snapshot identifier</returns>
+    public async Task<string> CreateSnapshot(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // This only adds thread safety around the action of creating actions
+            // It's still possible that writes are happening whilst a snapshot is occurring
+            // Probably okay for the in-memory case but perhaps a good reason to move this out to a snapshottable wrapper
+            await _snapshotLock.WaitAsync(cancellationToken);
+            string snapShotId = Guid.NewGuid().ToString();
+
+            // Since events *should* be immutable, copying individual events by reference shouldn't be an issue
+            var snapshot = new InMemoryEventStore();
+            await CopyTo(snapshot);
+            _snapshots.TryAdd(snapShotId, snapshot);
+
+            return snapShotId;
+        }
+        finally
+        {
+            _snapshotLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Restores the event store from a previously taken snapshot
+    /// </summary>
+    /// <param name="snapshotId">The snapshot identifier</param>
+    /// <param name="deleteSnapshotOnRestore">Whether to remove the snapshot once it has been restored</param>
+    /// <returns></returns>
+    public async Task RestoreFromSnapshot(string snapshotId, bool deleteSnapshotOnRestore, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _snapshotLock.WaitAsync(cancellationToken);
+            _streams = _snapshots[snapshotId]._streams;
+
+            if (deleteSnapshotOnRestore)
+            {
+                _snapshots.TryRemove(snapshotId, out _);
+            }
+        }
+        finally
+        {
+            _snapshotLock.Release();
+        }
     }
 }
